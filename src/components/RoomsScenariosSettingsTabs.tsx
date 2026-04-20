@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Light, Scenario, ScenarioSchedule, ScheduleItem, Notification } from './types';
+import RoomFloorPlan from './RoomFloorPlan';
 
 interface RoomsScenariosSettingsTabsProps {
   lights: Light[];
@@ -124,6 +125,14 @@ const RoomsScenariosSettingsTabs = ({
                   <span>100%</span>
                 </div>
               </div>
+            </Card>
+
+            <Card className="glassmorphism border-0 p-4 mb-4">
+              <RoomFloorPlan
+                room={selectedRoom}
+                lights={filteredLights}
+                onToggleLight={toggleLight}
+              />
             </Card>
           </>
         )}
