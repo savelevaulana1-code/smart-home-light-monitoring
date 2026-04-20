@@ -5,8 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
-import { Light, Scenario, ScheduleItem, Notification } from './types';
+import { Light, Scenario, ScenarioSchedule, ScheduleItem, Notification } from './types';
 
 interface RoomsScenariosSettingsTabsProps {
   lights: Light[];
@@ -17,6 +20,7 @@ interface RoomsScenariosSettingsTabsProps {
   toggleRoomLights: (room: string, turnOn: boolean) => void;
   setRoomBrightness: (room: string, value: number) => void;
   activateScenario: (name: string) => void;
+  onUpdateScenarioSchedule: (id: string, schedule: ScenarioSchedule) => void;
 }
 
 const RoomsScenariosSettingsTabs = ({ 
@@ -27,10 +31,24 @@ const RoomsScenariosSettingsTabs = ({
   toggleLight, 
   toggleRoomLights,
   setRoomBrightness,
-  activateScenario 
+  activateScenario,
+  onUpdateScenarioSchedule,
 }: RoomsScenariosSettingsTabsProps) => {
   const rooms = ['Все', ...Array.from(new Set(lights.map(l => l.room)))];
   const [selectedRoom, setSelectedRoom] = useState('Все');
+  const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
+  const [scheduleForm, setScheduleForm] = useState<ScenarioSchedule>({ enabled: false, startTime: '00:00', endTime: '00:00' });
+
+  const openScheduleModal = (scenario: Scenario) => {
+    setEditingScenario(scenario);
+    setScheduleForm(scenario.schedule ?? { enabled: false, startTime: '08:00', endTime: '22:00' });
+  };
+
+  const saveSchedule = () => {
+    if (!editingScenario) return;
+    onUpdateScenarioSchedule(editingScenario.id, scheduleForm);
+    setEditingScenario(null);
+  };
 
   const filteredLights = selectedRoom === 'Все' 
     ? lights 
@@ -151,17 +169,86 @@ const RoomsScenariosSettingsTabs = ({
             <Card
               key={scenario.id}
               className="glassmorphism border-0 p-6 cursor-pointer transition-all duration-300 hover:scale-105"
-              onClick={() => activateScenario(scenario.name)}
+              onClick={() => openScheduleModal(scenario)}
             >
               <div className="space-y-3">
                 <div className={`${scenario.gradient} p-3 rounded-xl w-fit`}>
-                  <Icon name={scenario.icon as any} size={28} />
+                  <Icon name={scenario.icon as string} size={28} />
                 </div>
                 <h3 className="font-semibold text-lg">{scenario.name}</h3>
+                {scenario.schedule?.enabled ? (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Icon name="Clock" size={12} />
+                    <span>{scenario.schedule.startTime} – {scenario.schedule.endTime}</span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Нет расписания</p>
+                )}
               </div>
             </Card>
           ))}
         </div>
+
+        <Dialog open={!!editingScenario} onOpenChange={(open) => !open && setEditingScenario(null)}>
+          <DialogContent className="glassmorphism border-0 max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {editingScenario && (
+                  <div className={`${editingScenario.gradient} p-2 rounded-lg`}>
+                    <Icon name={editingScenario.icon as string} size={18} />
+                  </div>
+                )}
+                {editingScenario?.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5 pt-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">Расписание включено</Label>
+                <Switch
+                  checked={scheduleForm.enabled}
+                  onCheckedChange={(v) => setScheduleForm(prev => ({ ...prev, enabled: v }))}
+                />
+              </div>
+              <div className={`space-y-4 transition-opacity ${scheduleForm.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                <div className="space-y-2">
+                  <Label>Начало работы</Label>
+                  <Input
+                    type="time"
+                    value={scheduleForm.startTime}
+                    onChange={(e) => setScheduleForm(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="glassmorphism border-white/10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Конец работы</Label>
+                  <Input
+                    type="time"
+                    value={scheduleForm.endTime}
+                    onChange={(e) => setScheduleForm(prev => ({ ...prev, endTime: e.target.value }))}
+                    className="glassmorphism border-white/10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  className="flex-1 gradient-purple-pink border-0"
+                  onClick={saveSchedule}
+                >
+                  <Icon name="Check" size={16} className="mr-1" />
+                  Сохранить
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => activateScenario(editingScenario!.name)}
+                >
+                  <Icon name="Play" size={16} className="mr-1" />
+                  Активировать
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </TabsContent>
 
       <TabsContent value="schedule" className="space-y-4 mt-6">

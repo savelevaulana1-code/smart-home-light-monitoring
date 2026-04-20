@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import { Light, Scenario, ScheduleItem, Notification, Product, CartItem, Room } from '@/components/types';
+import { Light, Scenario, ScenarioSchedule, ScheduleItem, Notification, Product, CartItem, Room } from '@/components/types';
 import HeaderWithNotifications from '@/components/HeaderWithNotifications';
 import HomeMapShopTabs from '@/components/HomeMapShopTabs';
 import RoomsScenariosSettingsTabs from '@/components/RoomsScenariosSettingsTabs';
@@ -52,6 +52,7 @@ const Index = () => {
   const [rooms, setRooms] = useState<Room[]>(loadRoomsFromStorage);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
+  const [scenarioSchedules, setScenarioSchedules] = useState<Record<string, ScenarioSchedule>>({});
   const { broadcast } = useDemoSync(lights, setLights, demoMode);
 
   useEffect(() => {
@@ -70,6 +71,11 @@ const Index = () => {
     }
   }, [lights]);
 
+  const updateScenarioSchedule = (id: string, schedule: ScenarioSchedule) => {
+    setScenarioSchedules(prev => ({ ...prev, [id]: schedule }));
+    toast.success(`Расписание ${schedule.enabled ? 'сохранено' : 'отключено'}`);
+  };
+
   const scenarios: Scenario[] = [
     { 
       id: '1', 
@@ -85,7 +91,8 @@ const Index = () => {
         'Гостиная': 'rgba(251, 146, 60, 0.25)',
         'Спальня': 'rgba(249, 115, 22, 0.2)',
         'Кухня': 'rgba(120, 113, 108, 0.15)'
-      }
+      },
+      schedule: scenarioSchedules['1'],
     },
     { 
       id: '2', 
@@ -101,7 +108,8 @@ const Index = () => {
         'Гостиная': 'rgba(59, 130, 246, 0.25)',
         'Спальня': 'rgba(120, 113, 108, 0.15)',
         'Кухня': 'rgba(14, 165, 233, 0.25)'
-      }
+      },
+      schedule: scenarioSchedules['2'],
     },
     { 
       id: '3', 
@@ -117,7 +125,8 @@ const Index = () => {
         'Гостиная': 'rgba(120, 113, 108, 0.15)',
         'Спальня': 'rgba(139, 92, 246, 0.2)',
         'Кухня': 'rgba(120, 113, 108, 0.15)'
-      }
+      },
+      schedule: scenarioSchedules['3'],
     },
     { 
       id: '4', 
@@ -133,7 +142,8 @@ const Index = () => {
         'Гостиная': 'rgba(236, 72, 153, 0.25)',
         'Спальня': 'rgba(168, 85, 247, 0.25)',
         'Кухня': 'rgba(14, 165, 233, 0.25)'
-      }
+      },
+      schedule: scenarioSchedules['4'],
     },
   ];
 
@@ -360,6 +370,7 @@ const Index = () => {
             toggleRoomLights={toggleRoomLights}
             setRoomBrightness={setRoomBrightness}
             activateScenario={activateScenario}
+            onUpdateScenarioSchedule={updateScenarioSchedule}
           />
         </Tabs>
       </div>

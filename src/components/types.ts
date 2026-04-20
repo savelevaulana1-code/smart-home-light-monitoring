@@ -8,6 +8,12 @@ export interface Light {
   y?: number;
 }
 
+export interface ScenarioSchedule {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
 export interface Scenario {
   id: string;
   name: string;
@@ -22,6 +28,7 @@ export interface Scenario {
   roomColors?: {
     [room: string]: string;
   };
+  schedule?: ScenarioSchedule;
 }
 
 export interface ScheduleItem {
