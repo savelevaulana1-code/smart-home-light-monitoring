@@ -76,6 +76,32 @@ const Index = () => {
     toast.success(`Расписание ${schedule.enabled ? 'сохранено' : 'отключено'}`);
   };
 
+  useEffect(() => {
+    const checkSchedules = () => {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      Object.entries(scenarioSchedules).forEach(([id, sched]) => {
+        if (!sched.enabled) return;
+        if (currentTime === sched.startTime) {
+          const name = scenarios.find(s => s.id === id)?.name;
+          if (name) {
+            activateScenario(name);
+            toast.info(`Сценарий "${name}" запущен по расписанию`);
+          }
+        }
+        if (currentTime === sched.endTime) {
+          setLights(prev => prev.map(l => ({ ...l, isOn: false })));
+          const name = scenarios.find(s => s.id === id)?.name;
+          toast.info(`Сценарий "${name ?? ''}" завершён по расписанию`);
+        }
+      });
+    };
+
+    const interval = setInterval(checkSchedules, 60000);
+    return () => clearInterval(interval);
+  }, [scenarioSchedules]);
+
   const scenarios: Scenario[] = [
     { 
       id: '1', 
