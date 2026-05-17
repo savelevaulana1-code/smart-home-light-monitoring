@@ -427,6 +427,7 @@ const Index = () => {
             scenarios={scenarios}
             schedule={schedule}
             notifications={notifications}
+            roomsList={rooms.map(r => ({ id: r.id, name: r.name }))}
             toggleLight={toggleLight}
             toggleRoomLights={toggleRoomLights}
             setRoomBrightness={setRoomBrightness}

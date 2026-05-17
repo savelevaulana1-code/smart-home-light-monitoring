@@ -11,12 +11,14 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { Light, Scenario, ScenarioSchedule, ScheduleItem, Notification } from './types';
 import RoomFloorPlan from './RoomFloorPlan';
+import RoomAnalytics from './RoomAnalytics';
 
 interface RoomsScenariosSettingsTabsProps {
   lights: Light[];
   scenarios: Scenario[];
   schedule: ScheduleItem[];
   notifications: Notification[];
+  roomsList?: { id: string; name: string }[];
   toggleLight: (id: string) => void;
   toggleRoomLights: (room: string, turnOn: boolean) => void;
   setRoomBrightness: (room: string, value: number) => void;
@@ -29,6 +31,7 @@ const RoomsScenariosSettingsTabs = ({
   scenarios, 
   schedule, 
   notifications,
+  roomsList = [],
   toggleLight, 
   toggleRoomLights,
   setRoomBrightness,
@@ -37,6 +40,7 @@ const RoomsScenariosSettingsTabs = ({
 }: RoomsScenariosSettingsTabsProps) => {
   const rooms = ['Все', ...Array.from(new Set(lights.map(l => l.room)))];
   const [selectedRoom, setSelectedRoom] = useState('Все');
+  const [analyticsRoom, setAnalyticsRoom] = useState<{ id: string; name: string } | null>(null);
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
   const [scheduleForm, setScheduleForm] = useState<ScenarioSchedule>({ enabled: false, startTime: '00:00', endTime: '00:00' });
 
@@ -58,7 +62,14 @@ const RoomsScenariosSettingsTabs = ({
   return (
     <>
       <TabsContent value="rooms" className="space-y-4 mt-6">
-        <div className="flex gap-2 flex-wrap mb-4">
+        {analyticsRoom ? (
+          <RoomAnalytics
+            roomId={analyticsRoom.id}
+            roomName={analyticsRoom.name}
+            onBack={() => setAnalyticsRoom(null)}
+          />
+        ) : (
+        <><div className="flex gap-2 flex-wrap mb-4">
           {rooms.map((room) => (
             <Badge
               key={room}
@@ -75,14 +86,26 @@ const RoomsScenariosSettingsTabs = ({
         {selectedRoom !== 'Все' && (
           <>
             <Card className="glassmorphism border-0 p-4 mb-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <p className="font-semibold">Управление комнатой</p>
                   <p className="text-sm text-muted-foreground">
                     {filteredLights.filter(l => l.isOn).length} из {filteredLights.length} включено
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gradient-blue-orange border-0"
+                    onClick={() => {
+                      const r = roomsList.find(r => r.name === selectedRoom);
+                      if (r) setAnalyticsRoom(r);
+                    }}
+                  >
+                    <Icon name="BarChart3" size={16} className="mr-1" />
+                    Аналитика
+                  </Button>
                   <Button 
                     size="sm" 
                     variant="outline"
@@ -169,6 +192,8 @@ const RoomsScenariosSettingsTabs = ({
             </Card>
           ))}
         </div>
+        </>
+        )}
       </TabsContent>
 
       <TabsContent value="scenarios" className="space-y-4 mt-6">
