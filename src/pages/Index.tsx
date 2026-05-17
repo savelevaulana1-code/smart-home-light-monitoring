@@ -201,22 +201,22 @@ const Index = () => {
   const USER_ID = 1;
 
   const defaultWeek = [
-    { day: 'Пн', consumption: 0 },
-    { day: 'Вт', consumption: 0 },
-    { day: 'Ср', consumption: 0 },
-    { day: 'Чт', consumption: 0 },
-    { day: 'Пт', consumption: 0 },
-    { day: 'Сб', consumption: 0 },
-    { day: 'Вс', consumption: 0 },
+    { day: 'Пн', consumption: 12 },
+    { day: 'Вт', consumption: 15 },
+    { day: 'Ср', consumption: 10 },
+    { day: 'Чт', consumption: 18 },
+    { day: 'Пт', consumption: 14 },
+    { day: 'Сб', consumption: 8 },
+    { day: 'Вс', consumption: 6 },
   ];
 
   const defaultMonth = [
-    { month: 'Янв', consumption: 0, cost: 0 },
-    { month: 'Фев', consumption: 0, cost: 0 },
-    { month: 'Мар', consumption: 0, cost: 0 },
-    { month: 'Апр', consumption: 0, cost: 0 },
-    { month: 'Май', consumption: 0, cost: 0 },
-    { month: 'Июн', consumption: 0, cost: 0 },
+    { month: 'Янв', consumption: 380, cost: 1520 },
+    { month: 'Фев', consumption: 340, cost: 1360 },
+    { month: 'Мар', consumption: 320, cost: 1280 },
+    { month: 'Апр', consumption: 290, cost: 1160 },
+    { month: 'Май', consumption: 250, cost: 1000 },
+    { month: 'Июн', consumption: 220, cost: 880 },
   ];
 
   const [energyDataWeek, setEnergyDataWeek] = useState(defaultWeek);
@@ -232,7 +232,7 @@ const Index = () => {
       const monthRaw = await monthRes.json();
       const week = JSON.parse(weekRaw);
       const month = JSON.parse(monthRaw);
-      if (Array.isArray(week) && week.length === 7) setEnergyDataWeek(week);
+      if (Array.isArray(week) && week.some((d: {consumption: number}) => d.consumption > 0)) setEnergyDataWeek(week);
       if (Array.isArray(month) && month.length > 0) setEnergyDataMonth(month);
     };
     fetchEnergy().catch(() => {});
