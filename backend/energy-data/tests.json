@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "GET week data",
+      "method": "GET",
+      "path": "/?mode=week&user_id=1",
+      "expectedStatus": 200,
+      "expectedBody": "day",
+      "bodyMatcher": "contains"
+    },
+    {
+      "name": "POST save energy record",
+      "method": "POST",
+      "path": "/",
+      "body": {"user_id": 1, "room_id": 1, "date": "2026-05-17", "consumption_kwh": 3.5, "peak_load": 1.2},
+      "expectedStatus": 200,
+      "expectedBody": "ok",
+      "bodyMatcher": "contains"
+    }
+  ]
+}

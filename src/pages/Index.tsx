@@ -197,24 +197,55 @@ const Index = () => {
 
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const energyDataWeek = [
-    { day: 'Пн', consumption: 12 },
-    { day: 'Вт', consumption: 15 },
-    { day: 'Ср', consumption: 10 },
-    { day: 'Чт', consumption: 18 },
-    { day: 'Пт', consumption: 14 },
-    { day: 'Сб', consumption: 8 },
-    { day: 'Вс', consumption: 6 },
+  const ENERGY_URL = 'https://functions.poehali.dev/3b49d89a-1db1-4cd1-8617-4d88b757f63b';
+  const USER_ID = 1;
+
+  const defaultWeek = [
+    { day: 'Пн', consumption: 0 },
+    { day: 'Вт', consumption: 0 },
+    { day: 'Ср', consumption: 0 },
+    { day: 'Чт', consumption: 0 },
+    { day: 'Пт', consumption: 0 },
+    { day: 'Сб', consumption: 0 },
+    { day: 'Вс', consumption: 0 },
   ];
 
-  const energyDataMonth = [
-    { month: 'Янв', consumption: 380, cost: 1520 },
-    { month: 'Фев', consumption: 340, cost: 1360 },
-    { month: 'Мар', consumption: 320, cost: 1280 },
-    { month: 'Апр', consumption: 290, cost: 1160 },
-    { month: 'Май', consumption: 250, cost: 1000 },
-    { month: 'Июн', consumption: 220, cost: 880 },
+  const defaultMonth = [
+    { month: 'Янв', consumption: 0, cost: 0 },
+    { month: 'Фев', consumption: 0, cost: 0 },
+    { month: 'Мар', consumption: 0, cost: 0 },
+    { month: 'Апр', consumption: 0, cost: 0 },
+    { month: 'Май', consumption: 0, cost: 0 },
+    { month: 'Июн', consumption: 0, cost: 0 },
   ];
+
+  const [energyDataWeek, setEnergyDataWeek] = useState(defaultWeek);
+  const [energyDataMonth, setEnergyDataMonth] = useState(defaultMonth);
+
+  useEffect(() => {
+    const fetchEnergy = async () => {
+      const [weekRes, monthRes] = await Promise.all([
+        fetch(`${ENERGY_URL}?mode=week&user_id=${USER_ID}`),
+        fetch(`${ENERGY_URL}?mode=month&user_id=${USER_ID}`),
+      ]);
+      const weekRaw = await weekRes.json();
+      const monthRaw = await monthRes.json();
+      const week = JSON.parse(weekRaw);
+      const month = JSON.parse(monthRaw);
+      if (Array.isArray(week) && week.length === 7) setEnergyDataWeek(week);
+      if (Array.isArray(month) && month.length > 0) setEnergyDataMonth(month);
+    };
+    fetchEnergy().catch(() => {});
+  }, []);
+
+  const saveEnergyRecord = async (roomId: string, consumptionKwh: number) => {
+    const today = new Date().toISOString().split('T')[0];
+    await fetch(ENERGY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: USER_ID, room_id: parseInt(roomId), date: today, consumption_kwh: consumptionKwh, peak_load: consumptionKwh * 0.3 }),
+    }).catch(() => {});
+  };
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.product.id === product.id);
@@ -256,6 +287,10 @@ const Index = () => {
       ));
       broadcast({ type: 'toggle', lightId: id, value: newState });
       toast.success('Состояние изменено');
+      if (newState) {
+        const room = rooms.find(r => r.name === light.room);
+        if (room) saveEnergyRecord(room.id, light.brightness / 100 * 0.06);
+      }
     }
   };
 
