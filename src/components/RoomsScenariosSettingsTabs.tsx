@@ -24,6 +24,7 @@ interface RoomsScenariosSettingsTabsProps {
   setRoomBrightness: (room: string, value: number) => void;
   activateScenario: (name: string) => void;
   onUpdateScenarioSchedule: (id: string, schedule: ScenarioSchedule) => void;
+  onAddRoom?: (name: string) => void;
 }
 
 const RoomsScenariosSettingsTabs = ({ 
@@ -37,12 +38,15 @@ const RoomsScenariosSettingsTabs = ({
   setRoomBrightness,
   activateScenario,
   onUpdateScenarioSchedule,
+  onAddRoom,
 }: RoomsScenariosSettingsTabsProps) => {
-  const rooms = ['Все', ...Array.from(new Set(lights.map(l => l.room)))];
+  const rooms = ['Все', ...Array.from(new Set([...lights.map(l => l.room), ...roomsList.map(r => r.name)]))];
   const [selectedRoom, setSelectedRoom] = useState('Все');
   const [analyticsRoom, setAnalyticsRoom] = useState<{ id: string; name: string } | null>(null);
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
   const [scheduleForm, setScheduleForm] = useState<ScenarioSchedule>({ enabled: false, startTime: '00:00', endTime: '00:00' });
+  const [addRoomOpen, setAddRoomOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
 
   const openScheduleModal = (scenario: Scenario) => {
     setEditingScenario(scenario);
@@ -69,7 +73,7 @@ const RoomsScenariosSettingsTabs = ({
             onBack={() => setAnalyticsRoom(null)}
           />
         ) : (
-        <><div className="flex gap-2 flex-wrap mb-4">
+        <><div className="flex gap-2 flex-wrap mb-4 items-center">
           {rooms.map((room) => (
             <Badge
               key={room}
@@ -82,7 +86,56 @@ const RoomsScenariosSettingsTabs = ({
               {room}
             </Badge>
           ))}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-sm border-dashed border-white/30 hover:border-white/60"
+            onClick={() => { setNewRoomName(''); setAddRoomOpen(true); }}
+          >
+            <Icon name="Plus" size={14} className="mr-1" />
+            Комната
+          </Button>
         </div>
+
+        <Dialog open={addRoomOpen} onOpenChange={setAddRoomOpen}>
+          <DialogContent className="glassmorphism border-white/10">
+            <DialogHeader>
+              <DialogTitle>Новая комната</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Название комнаты</Label>
+                <Input
+                  placeholder="Например: Детская, Кабинет..."
+                  value={newRoomName}
+                  onChange={e => setNewRoomName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && newRoomName.trim()) {
+                      onAddRoom?.(newRoomName.trim());
+                      setSelectedRoom(newRoomName.trim());
+                      setAddRoomOpen(false);
+                    }
+                  }}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setAddRoomOpen(false)}>Отмена</Button>
+                <Button
+                  className="gradient-purple-pink border-0"
+                  disabled={!newRoomName.trim()}
+                  onClick={() => {
+                    onAddRoom?.(newRoomName.trim());
+                    setSelectedRoom(newRoomName.trim());
+                    setAddRoomOpen(false);
+                  }}
+                >
+                  Добавить
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         {selectedRoom !== 'Все' && (
           <>
             <Card className="glassmorphism border-0 p-4 mb-4">
@@ -93,7 +146,7 @@ const RoomsScenariosSettingsTabs = ({
                     {filteredLights.filter(l => l.isOn).length} из {filteredLights.length} включено
                   </p>
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     size="sm"
                     variant="outline"
@@ -106,23 +159,30 @@ const RoomsScenariosSettingsTabs = ({
                     <Icon name="BarChart3" size={16} className="mr-1" />
                     Аналитика
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="gradient-purple-pink border-0"
-                    onClick={() => toggleRoomLights(selectedRoom, true)}
-                  >
-                    <Icon name="Power" size={16} className="mr-1" />
-                    Включить все
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => toggleRoomLights(selectedRoom, false)}
-                  >
-                    <Icon name="PowerOff" size={16} className="mr-1" />
-                    Выключить все
-                  </Button>
+                  <div className="flex items-center gap-1 rounded-lg border border-white/10 overflow-hidden">
+                    <button
+                      className={`px-3 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        filteredLights.some(l => l.isOn)
+                          ? 'bg-muted/40 text-muted-foreground'
+                          : 'bg-destructive/80 text-white'
+                      }`}
+                      onClick={() => toggleRoomLights(selectedRoom, false)}
+                    >
+                      <Icon name="PowerOff" size={14} />
+                      Выкл
+                    </button>
+                    <button
+                      className={`px-3 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        filteredLights.some(l => l.isOn)
+                          ? 'gradient-purple-pink text-white'
+                          : 'bg-muted/40 text-muted-foreground'
+                      }`}
+                      onClick={() => toggleRoomLights(selectedRoom, true)}
+                    >
+                      <Icon name="Power" size={14} />
+                      Вкл
+                    </button>
+                  </div>
                 </div>
               </div>
             </Card>

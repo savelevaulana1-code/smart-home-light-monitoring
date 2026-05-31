@@ -434,6 +434,11 @@ const Index = () => {
             setRoomBrightness={setRoomBrightness}
             activateScenario={activateScenario}
             onUpdateScenarioSchedule={updateScenarioSchedule}
+            onAddRoom={(name) => {
+              const id = String(Date.now());
+              setRooms(prev => [...prev, { id, name, icon: 'Home', color: 'rgba(139,92,246,0.2)', x: 10, y: 80, width: 120, height: 100 }]);
+              toast.success(`Комната «${name}» добавлена`);
+            }}
           />
         </Tabs>
       </div>
